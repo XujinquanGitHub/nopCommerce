@@ -54,12 +54,6 @@ namespace Nop.Web.Factories
             var cacheKey = string.Format(ModelCacheEventConsumer.WIDGET_MODEL_KEY,
                 _workContext.CurrentCustomer.Id, _storeContext.CurrentStore.Id, widgetZone, _themeContext.WorkingThemeName);
 
-            //add widget zone to view component arguments
-            additionalData = new RouteValueDictionary(additionalData)
-            {
-                { "widgetZone", widgetZone }
-            };
-
             var cachedModel = _cacheManager.Get(cacheKey, () =>
             {
                 //model
@@ -73,7 +67,8 @@ namespace Nop.Web.Factories
                     var widgetModel = new RenderWidgetModel
                     {
                         WidgetViewComponentName = viewComponentName,
-                        WidgetViewComponentArguments = additionalData
+                        WidgetZone = widgetZone,
+                        AdditionalData = additionalData
                     };
 
                     model.Add(widgetModel);
@@ -81,7 +76,7 @@ namespace Nop.Web.Factories
                 return model;
             });
 
-            //"WidgetViewComponentArguments" property of widget models depends on "additionalData".
+            //"AdditionalData" property of widget models depends on "additionalData".
             //We need to clone the cached model before modifications (the updated one should not be cached)
             var clonedModel = new List<RenderWidgetModel>();
 
@@ -89,19 +84,11 @@ namespace Nop.Web.Factories
             {
                 var clonedWidgetModel = new RenderWidgetModel
                 {
-                    WidgetViewComponentName = widgetModel.WidgetViewComponentName
+                    WidgetViewComponentName = widgetModel.WidgetViewComponentName,
+                    WidgetZone = widgetModel.WidgetZone,
+                    AdditionalData = additionalData
                 };
-
-                if (widgetModel.WidgetViewComponentArguments != null)
-                    clonedWidgetModel.WidgetViewComponentArguments = new RouteValueDictionary(widgetModel.WidgetViewComponentArguments);
-
-                if (additionalData != null)
-                {
-                    if (clonedWidgetModel.WidgetViewComponentArguments == null)
-                        clonedWidgetModel.WidgetViewComponentArguments = new RouteValueDictionary();
-
-                    clonedWidgetModel.WidgetViewComponentArguments = additionalData;
-                }
+                
 
                 clonedModel.Add(clonedWidgetModel);
             }
